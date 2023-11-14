@@ -1,8 +1,12 @@
 use std::collections::HashMap;
 use std::io;
+use serde::{Serialize, Deserialize};
+use serde_json;
+use std::fs::File;
+use std::io::Read;
 
 // Defining a TrieNode struct
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 struct TrieNode {
     children: HashMap<char, TrieNode>,
     is_end_of_word: bool
@@ -18,7 +22,7 @@ impl TrieNode {
 }
 
 // Defining a Trie struct (made up of TrieNodes)
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 struct Trie {
     root: TrieNode  // there is no initialization at this point
 }
@@ -75,6 +79,13 @@ fn main() {
     
     let mut auto_complete_trie = Trie::new();
 
+    // insert any words from serialized file "serialized_trie.json" into auto_complete_trie
+    let mut file = File::open("serialized_trie.json").expect("File not found.");
+    let mut file_contents = String::new();
+    file.read_to_string(&mut file_contents).expect("Could not read file.");
+
+    auto_complete_trie = serde_json::from_str(&mut file_contents).expect("There was a problem deserializing into auto_complete_trie.");
+
     // need a string to store user's input
     let mut user_word = String::new();
 
@@ -91,6 +102,12 @@ fn main() {
         auto_complete_trie.insert(&word);
 
         println!("{:?}", auto_complete_trie);
+
+        // serialize the trie
+        let serialized = serde_json::to_string(&auto_complete_trie).unwrap();
+        println!("Serialized: {}", serialized);
+        // write to file
+        std::fs::write("serialized_trie.json", serialized).expect("Failed to write to the persistent file storing the trie");
 
         user_word = String::new();
         println!("Enter word you would like to add to the Trie: ");
