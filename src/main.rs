@@ -60,17 +60,32 @@ impl Trie {
     }
 
     // search for a partial word method
-    fn search_partial(&mut self, partial_word: &str) -> bool {
-        let mut cur = &mut self.root;
+    fn search_partial(&self, partial_word: &str) -> Option<&TrieNode> {
+        let mut cur = &self.root;
 
         for c in partial_word.chars() {
            if !cur.children.contains_key(&c) {
-                return false;
+                return None;
            } 
-           cur = cur.children.get_mut(&c).unwrap();  // getting value from Option<char, TrieNode>
+           cur = cur.children.get(&c).unwrap();  // getting value from Option<char, TrieNode>
         }
-        return true;
+        return Some(cur);
     }
+
+    // get whole word from partial word
+    // start at root
+    // if char in children, then look at children's children
+    // for each, repeat above step until depth limit is reached or is_end_of_word is True
+    fn dfs(&self) {
+        self.dfs_helper(&self.root);
+    }
+
+    fn dfs_helper(&self, trieNode: &TrieNode) {
+        for (key, t_node) in trieNode.children.iter() {
+            println!("key: {}", key);
+            self.dfs_helper(t_node); 
+        }
+    } 
 }
 
 
@@ -85,6 +100,8 @@ fn main() {
     file.read_to_string(&mut file_contents).expect("Could not read file.");
 
     auto_complete_trie = serde_json::from_str(&mut file_contents).expect("There was a problem deserializing into auto_complete_trie.");
+
+    auto_complete_trie.dfs();
 
     // need a string to store user's input
     let mut user_word = String::new();
@@ -102,6 +119,12 @@ fn main() {
         auto_complete_trie.insert(&word);
 
         println!("{:?}", auto_complete_trie);
+
+        // print words down that branch
+        let t_node = auto_complete_trie.search_partial(&word).unwrap();
+        println!("t_node: {:?}", t_node); 
+
+        auto_complete_trie.dfs_helper(t_node);
 
         // serialize the trie
         let serialized = serde_json::to_string(&auto_complete_trie).unwrap();
