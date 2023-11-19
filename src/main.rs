@@ -115,16 +115,24 @@ fn main() {
         // trim EOL
         let word = user_word.trim();
         println!("You inputted the word: {}", word);
+
+        // print words down that branch
+        let t_node = auto_complete_trie.search_partial(&word);
+        println!("t_node: {:?}", t_node); 
+
+        match t_node {
+            Some(node) => {
+                auto_complete_trie.dfs_helper(node);
+            },
+            None => {
+                println!("No partial matches found");
+            }
+        }
         // add word to auto_complete_trie
         auto_complete_trie.insert(&word);
 
         println!("{:?}", auto_complete_trie);
 
-        // print words down that branch
-        let t_node = auto_complete_trie.search_partial(&word).unwrap();
-        println!("t_node: {:?}", t_node); 
-
-        auto_complete_trie.dfs_helper(t_node);
 
         // serialize the trie
         let serialized = serde_json::to_string(&auto_complete_trie).unwrap();
