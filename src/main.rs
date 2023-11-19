@@ -83,6 +83,9 @@ impl Trie {
     fn dfs_helper(&self, trieNode: &TrieNode) {
         for (key, t_node) in trieNode.children.iter() {
             println!("key: {}", key);
+            if (t_node.is_end_of_word) {
+                println!("---");
+            }
             self.dfs_helper(t_node); 
         }
     } 
